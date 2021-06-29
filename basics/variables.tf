@@ -3,6 +3,11 @@ variable "prefix" {
   type    = list(string)
 }
 
+variable "pets" {
+  default = ["cat", "dog", "fish"]
+  type    = set(string)
+}
+
 # Similar to list, only difference, it cannot have duplicate values
 # variable "prefix" {
 #   default = ["Mr", "Mrs", "Sir", "Sir"]
