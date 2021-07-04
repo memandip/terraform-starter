@@ -4,6 +4,7 @@
 - [x] Docker
 - [x] Heroku 
 - [ ] Kubernetes
-- [ ] Azure
+- [x] Azure
 - [ ] AWS
 - [ ] GCP
+- [ ] Vault
