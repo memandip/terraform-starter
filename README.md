@@ -7,4 +7,4 @@
 - [x] Azure
 - [ ] AWS
 - [ ] GCP
-- [ ] Vault
+- [x] Vault
