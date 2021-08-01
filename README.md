@@ -5,6 +5,6 @@
 - [x] Heroku 
 - [ ] Kubernetes
 - [x] Azure
-- [ ] AWS
+- [x] AWS
 - [ ] GCP
-- [ ] Vault
+- [x] Vault
