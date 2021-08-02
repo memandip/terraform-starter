@@ -44,8 +44,56 @@ resource "aws_instance" "aws-instance-with-terraform" {
   associate_public_ip_address = true
   key_name                    = aws_key_pair.aws_ec2_key_pair.key_name
 
+  lifecycle {
+    prevent_destroy = true
+  }
+
+  # adding ssh connection for ubuntu user
+  connection {
+    type        = "ssh"
+    host        = self.public_ip
+    user        = "ubuntu"
+    private_key = file("~/.ssh/id_rsa")
+  }
+
   tags = {
     Terraform   = "true"
     Environment = "dev"
+  }
+}
+
+
+##############################################################################
+# configure Security Groups to make our EC2 instance publicly accessible     #
+##############################################################################
+variable "ingressrules" {
+  type    = list(number)
+  default = [80, 443, 22]
+}
+
+resource "aws_security_group" "web_traffic" {
+  name        = "Allow web traffic"
+  description = "Allow ssh and standard http/https ports inbound and everything outbound"
+
+  dynamic "ingress" {
+    iterator = port
+    for_each = var.ingressrules
+    content {
+      from_port   = port.value
+      to_port     = port.value
+      protocol    = "TCP"
+      cidr_blocks = ["0.0.0.0/0"]
+    }
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    "Terraform" = "true"
   }
 }
