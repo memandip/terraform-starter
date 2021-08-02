@@ -28,17 +28,72 @@ provider "aws" {
 # You might need to create default vpc if no default vpc exists
 
 resource "aws_instance" "aws-instance-with-terraform" {
+  # number of similar instances you want to create
+  # count = 1
+
   # Amazon Machine Image (ami), current ami is the id for ubuntu 20.04
   # ami id differs for different regions, so if you change the region
-  # you need to change the ami id as well
+  # you might need to change the ami id as well
+  # you can get instance ami from aws console
   ami           = "ami-09e67e426f25ce0d7"
-  instance_type = "t2.micro"
+  instance_type = "t2.nano"
 
-  # we need to specify it there's no default vpc
+  # we need to specify if there's no default vpc
   # vpc_security_group_ids = []
+
+  associate_public_ip_address = true
+  key_name                    = aws_key_pair.aws_ec2_key_pair.key_name
+
+  lifecycle {
+    prevent_destroy = true
+  }
+
+  # adding ssh connection for ubuntu user
+  connection {
+    type        = "ssh"
+    host        = self.public_ip
+    user        = "ubuntu"
+    private_key = file("~/.ssh/id_rsa")
+  }
 
   tags = {
     Terraform   = "true"
     Environment = "dev"
+  }
+}
+
+
+##############################################################################
+# configure Security Groups to make our EC2 instance publicly accessible     #
+##############################################################################
+variable "ingressrules" {
+  type    = list(number)
+  default = [80, 443, 22]
+}
+
+resource "aws_security_group" "web_traffic" {
+  name        = "Allow web traffic"
+  description = "Allow ssh and standard http/https ports inbound and everything outbound"
+
+  dynamic "ingress" {
+    iterator = port
+    for_each = var.ingressrules
+    content {
+      from_port   = port.value
+      to_port     = port.value
+      protocol    = "TCP"
+      cidr_blocks = ["0.0.0.0/0"]
+    }
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    "Terraform" = "true"
   }
 }
