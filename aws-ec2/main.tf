@@ -23,26 +23,13 @@ provider "aws" {
 #   source = "../shared/aws/vpc"
 # }
 
-data "aws_ami" "ubuntu" {
-  most_recent = true
-
-  filter {
-    name   = "name"
-    values = ["ubuntu/images/hvm-ssd/ubuntu-focal-20.04-amd64-server-*"]
-  }
-
-  filter {
-    name   = "virtualization-type"
-    values = ["hvm"]
-  }
-
-  owners = ["099720109477"]
-}
-
 # aws ec2 create-default-vpc
 # aws_instance expects a default vpc to exist
 # You might need to create default vpc if no default vpc exists
 
+# @TODO: currently, on some changes in configuration
+# the terraform destroys previous instance and creates a new one along with different associated public IP
+# find a way to keep the old instance and apply all the changes to the old instance
 resource "aws_instance" "aws-instance-with-terraform" {
   # number of similar instances you want to create
   # count = 1
@@ -54,15 +41,24 @@ resource "aws_instance" "aws-instance-with-terraform" {
   ami           = data.aws_ami.ubuntu.id
   instance_type = "t2.nano"
 
+  availability_zone = "${local.region}f"
+
   # we need to specify if there's no default vpc
   # vpc_security_group_ids = []
 
   associate_public_ip_address = true
   # key_name                    = aws_key_pair.aws_ec2_key_pair.key_name
 
-  # lifecycle {
-  #   prevent_destroy = true
-  # }
+  ebs_block_device {
+    device_name = "/dev/sda1"
+    volume_size = "20"
+  }
+
+  lifecycle {
+    # prevent_destroy = true
+    create_before_destroy = true
+    ignore_changes        = []
+  }
 
   # adding ssh connection for ubuntu user
   connection {
